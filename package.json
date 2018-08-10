@@ -1,0 +1,46 @@
+{
+  "name": "chordpronode",
+  "version": "1.0.0",
+  "description": "Chordpro to json parser module using moo",
+  "main": "lib/chordpronode.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/oztexan/chordpronode"
+  },
+  "scripts": {
+  "test": "mocha"
+  },
+  "author": "Chris Robertson <oztexan@gmail.com>",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "moo": "^0.4.3"
+  },
+  "keywords": [
+    "chordpro",
+    "moo",
+    "parse",
+    "parser",
+    "tokenizer"
+  ],
+  "bugs": {
+    "url": "https://github.com/oztexan/chordpronode/issues"
+  },
+  "devDependencies": {
+    "babel-loader": "^5.0.0",
+    "babel-preset-es2015": "^6.1.18",
+    "del": "^2.1.0",
+    "gulp": "^3.9.1",
+    "gulp-babel": "^6.1.1",
+    "gulp-concat": "^2.6.0",
+    "gulp-jshint": "^2.0.0",
+    "gulp-mocha": "^2.2.0",
+    "gulp-rename": "^1.2.2",
+    "gulp-sourcemaps": "^1.6.0",
+    "gulp-uglify": "^1.5.1",
+    "jshint": "^2.0",
+    "jshint-stylish": "^2.1.0",
+    "mocha": "^5.2.0",
+    "must": "^0.13.4"
+  }
+}
