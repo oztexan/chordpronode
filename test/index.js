@@ -8,7 +8,6 @@ describe('chordpro', function() {
 
     it('should parse one-letter chord', function() {
       var chord = chordpro.parse('[C]');
-      console.log(JSON.stringify(chord));
       expect(chord[0].value).to.equal('chordline');
       expect(chord[0].children[0].value).to.equal('C');
     });
@@ -196,42 +195,32 @@ describe('chordpro', function() {
       expect(parsedLine[0].type).to.equal('NL');
     });
 
-    it('should ignore multiple value-less directives on one line', function() {
+    it('should pass through multiple value-less directives on one line', function() {
       var parsedLine = chordpro.parse('{soh}some text{eoh}');
 
-      console.log(JSON.stringify(parsedLine,0,2));
-      expect(parsedLine[0].type).to.equal('NL');
-
-      expect(parsedLine.length).to.equal(5);
-      expect(parsedLine[0].directive.type).to.equal('soh');
-      expect(parsedLine[1].lyrics).to.equal('some');
-      expect(parsedLine[2].lyrics).to.equal(' ');
-      expect(parsedLine[3].lyrics).to.equal('text');
-      expect(parsedLine[4].directive.type).to.equal('eoh');
+      expect(parsedLine.length).to.equal(3);
+      expect(parsedLine[0].type).to.equal('directive');
+      expect(parsedLine[0].value).to.equal('soh');
+      expect(parsedLine[1].type).to.equal('lyricline');
+      expect(parsedLine[1].children[0].value).to.equal('some text');
+      expect(parsedLine[2].type).to.equal('directive');
+      expect(parsedLine[2].value).to.equal('eoh');
     });
 
     it('should parse multiple valued directives on one line', function() {
       var parsedLine = chordpro.parse('{c: comment1}some text{c: comment2}');
 
-      console.log(JSON.stringify(parsedLine,0,2));
-      expect(parsedLine[0].type).to.equal('NL');
-
-      expect(parsedLine.length).to.equal(5);
-      expect(parsedLine[0].directive.type).to.equal('comment');
-      expect(parsedLine[0].directive.value).to.equal('comment1');
-      expect(parsedLine[1].lyrics).to.equal('some');
-      expect(parsedLine[2].lyrics).to.equal(' ');
-      expect(parsedLine[3].lyrics).to.equal('text');
-      expect(parsedLine[4].directive.type).to.equal('comment');
-      expect(parsedLine[4].directive.value).to.equal('comment2');
+      expect(parsedLine[0].type).to.equal('directive');
+      expect(parsedLine[0].value).to.equal('c');
+      expect(parsedLine.length).to.equal(3);
     });
 
     it('should allow colon in directive value', function() {
-      var parsedLine = chordpro._parseLine('{c: comment:}');
+      var parsedLine = chordpro.parse('{c: comment:}');
 
-      expect(parsedLine.length).to.equal(1);
-      expect(parsedLine[0].directive.type).to.equal('comment');
-      expect(parsedLine[0].directive.value).to.equal('comment:');
+      expect(parsedLine[0].type).to.equal('directive');
+      expect(parsedLine[0].value).to.equal('c');
+      expect(parsedLine[0].children[0].value).to.equal('comment:');
     });
   });
 
@@ -240,63 +229,149 @@ describe('chordpro', function() {
     it('should handle multiple lines', function() {
       var parseResult = chordpro.parse('[C]one\n[D]two');
 
-      console.log(JSON.stringify(parseResult,0,2));
-
-      expect(parseResult.parsedLines.length).to.equal(2);
-      expect(parseResult.parsedLines[0][0].chord).to.equal('C');
-      expect(parseResult.parsedLines[0][0].lyrics).to.equal('one');
-      expect(parseResult.parsedLines[1][0].chord).to.equal('D');
-      expect(parseResult.parsedLines[1][0].lyrics).to.equal('two');
+      expect(parseResult.length).to.equal(4);
+      expect(parseResult[0].type).to.equal('chordline');
+      expect(parseResult[1].type).to.equal('lyricline');
+      expect(parseResult[2].type).to.equal('chordline');
+      expect(parseResult[3].type).to.equal('lyricline');
+      expect(parseResult[0].children[0].value).to.equal('C');
+      expect(parseResult[1].children[0].value).to.equal('one');
+      expect(parseResult[2].children[0].value).to.equal('D');
+      expect(parseResult[3].children[0].value).to.equal('two');
     });
 
     it('should ignore comments at beginning of line', function() {
       var parseResult = chordpro.parse('one\n# comment\ntwo');
-      console.log(JSON.stringify(parseResult,0,2));
 
-      expect(parseResult.parsedLines.length).to.equal(2);
-      expect(parseResult.parsedLines[0][0].lyrics).to.equal('one');
-      expect(parseResult.parsedLines[1][0].lyrics).to.equal('two');
+      expect(parseResult.length).to.equal(3);
+      expect(parseResult[0].type).to.equal('lyricline');
+      expect(parseResult[1].type).to.equal('comment');
+      expect(parseResult[2].type).to.equal('lyricline');
+      expect(parseResult[0].children[0].value).to.equal('one');
+      expect(parseResult[1].value).to.equal('comment');
+      expect(parseResult[2].children[0].value).to.equal('two');
     });
 
     it('should ignore comments preceded by whitespace only', function() {
       var parseResult = chordpro.parse('one\n   # comment\ntwo');
-      console.log(JSON.stringify(parseResult,0,2));
 
-      expect(parseResult.parsedLines.length).to.equal(2);
-      expect(parseResult.parsedLines[0][0].lyrics).to.equal('one');
-      expect(parseResult.parsedLines[1][0].lyrics).to.equal('two');
+      expect(parseResult.length).to.equal(3);
+      expect(parseResult[0].type).to.equal('lyricline');
+      expect(parseResult[1].type).to.equal('comment');
+      expect(parseResult[2].type).to.equal('lyricline');
+      expect(parseResult[0].children[0].value).to.equal('one');
+      expect(parseResult[1].value).to.equal('comment');
+      expect(parseResult[2].children[0].value).to.equal('two');
     });
 
     it('should maintain text as is between sot/eot', function() {
       var parseResult = chordpro.parse('{sot}\n_ _ _ 1 _ _\n{eot}');
-      console.log(JSON.stringify(parseResult,0,2));
 
-      expect(parseResult.parsedLines.length).to.equal(3);
-      expect(parseResult.parsedLines[0][0].directive.type).to.equal('sot');
-      expect(parseResult.parsedLines[1][0].lyrics).to.equal('_ _ _ 1 _ _');
-      expect(parseResult.parsedLines[2][0].directive.type).to.equal('eot');
+      expect(parseResult.length).to.equal(1);
+      expect(parseResult[0].children[0].type).to.equal('tabline');
+      expect(parseResult[0].children[0].value).to.equal('_ _ _ 1 _ _');
+      expect(parseResult[0].children[1].type).to.equal('eot');
     });
 
     it('should return title when present', function() {
       var parseResult = chordpro.parse('{t: The Title}');
-      console.log(JSON.stringify(parseResult,0,2));
 
-      expect(parseResult.title).to.equal('The Title');
+      expect(parseResult[0].type).to.equal('directive');
+      expect(parseResult[0].value).to.equal('t');
+      expect(parseResult[0].children[0].value).to.equal('The Title');
     });
 
     it('should return subtitle when present', function() {
       var parseResult = chordpro.parse('{st: The Subtitles}');
-      console.log(JSON.stringify(parseResult,0,2));
 
-      expect(parseResult.subTitle).to.equal('The Subtitles');
+      expect(parseResult[0].type).to.equal('directive');
+      expect(parseResult[0].value).to.equal('st');
+      expect(parseResult[0].children[0].value).to.equal('The Subtitles');
     });
 
     it('should return both title and subtitle when present', function() {
-      var parseResult = chordpro.parse('{t: The Title}\n{st: The Subtitles}');
-      console.log(JSON.stringify(parseResult,0,2));
+      var parseResult = chordpro.parse(`{t: The Title}\n
+        {st: The Subtitles}`);
 
-      expect(parseResult.title).to.equal('The Title');
-      expect(parseResult.subTitle).to.equal('The Subtitles');
+      expect(parseResult[0].type).to.equal('directive');
+      expect(parseResult[0].value).to.equal('t');
+      expect(parseResult[0].children[0].value).to.equal('The Title');
+      expect(parseResult[1].type).to.equal('directive');
+      expect(parseResult[1].value).to.equal('st');
+      expect(parseResult[1].children[0].value).to.equal('The Subtitles');
+    });
+  });
+
+  describe('whole song', function() {
+
+    it('should parse a whole song', function() {
+      var parseResult = chordpro.parse(`
+{t: Deer Stand}
+{ipodid:2080676742384775562}
+{a: Chris Robertson}
+
+{start_of_grid 1+4x2+4}
+A    || G7 . | % . | %% . | . . |
+     | C7 . | %  . || G7 . | % . ||
+     |: C7 . | %  . :|: G7 . | % . :| repeat 4 times
+Coda | D7 . | Eb7 | D7 | G7 . | % . |.
+{end_of_grid}
+
+{c:Verse 1}
+{start_of_grid 1+4x2+4}
+|| Eb . . . | Gb . Ab . ||
+{end_of_grid}
+[Eb]Out in the county
+911's on the moon
+My [Gb]gun keeps the peace
+My [Ab]neighbors are few
+
+[Eb]Just the way I like it
+I don't wanna know 'em
+They could [Gb]be up to stuff
+God [Ab]never intended
+
+{c:Chorus 1}
+[Eb]Dee[Eb]eerr [Gb]Stand [Ab]
+
+{c:Verse 2}
+[Eb]Here in Texas
+the law's on my side
+Just an [Gb]eighth of an acre
+I can [Ab]hunt on a dime
+
+[Eb]Only one restriction
+Projectiles remain
+With[Gb]in the property
+[Ab]Challenge some say
+
+{c:Chorus 2}
+[Eb]Dee[Eb]eerr [Gb]Stand
+(Gonna [Ab] get me a deer stand)
+[Eb]Dee[Eb]eerr [Gb]Stand
+(Gonna [Ab] get me a deer stand)
+
+{c:Verse 3}
+[Eb]Built me a deer stand
+On the chimney it's perched
+So [Gb]when I take aim
+[Ab]Behind is the earth
+
+[Eb]Deer come wounded
+By Dennis the Menace
+I take [Gb]pity on them
+And [Ab]get me some venison
+
+{c: Solo over Verse}
+{sot}
+{eot}
+
+{c: Outro}
+Deer.......... Stand..........
+        `);
+      console.log(JSON.stringify(parseResult,null,2));
+
+      expect(parseResult.length).to.equal(parseResult.length);
     });
   });
 
